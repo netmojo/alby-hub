@@ -1,6 +1,7 @@
 package alby
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,4 +70,25 @@ func TestEncryptedBackup(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "{\"node_id\":\"037e702144c4fa485d42f0f69864e943605823763866cf4bf619d2d2cf2eda420b\",\"channels\":[],\"monitors\":[]}\n", decrypted)
+}
+
+func TestGetMe_WithoutAlbyAccount(t *testing.T) {
+	// Setup test service without any Alby OAuth tokens
+	svc, err := tests.CreateTestService(t)
+	require.NoError(t, err)
+	defer svc.Remove()
+
+	albyOAuthSvc := NewAlbyOAuthService(svc.DB, svc.Cfg, svc.Keys, svc.EventPublisher)
+
+	// Ensure no access token is set (simulating unlinked account)
+	err = svc.Cfg.SetUpdate(accessTokenKey, "", "")
+	require.NoError(t, err)
+
+	// Call GetMe - should return nil without error (no API call attempted)
+	ctx := context.Background()
+	me, err := albyOAuthSvc.GetMe(ctx)
+
+	// Assert that it returns nil for both me and error
+	assert.NoError(t, err)
+	assert.Nil(t, me)
 }
