@@ -432,6 +432,12 @@ func (svc *albyOAuthService) GetMe(ctx context.Context) (*AlbyMe, error) {
 		return nil, err
 	}
 
+	// Check if token is nil (no Alby account connected)
+	if token == nil {
+		logger.Logger.Debug("No Alby account connected, skipping GetMe request")
+		return nil, nil
+	}
+
 	client := svc.oauthConf.Client(ctx, token)
 	client.Timeout = 10 * time.Second
 
