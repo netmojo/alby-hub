@@ -461,6 +461,11 @@ func (svc *albyOAuthService) GetMe(ctx context.Context) (*AlbyMe, error) {
 	}
 
 	if res.StatusCode >= 300 {
+		// Handle 404 gracefully - account may have been deleted
+		if res.StatusCode == 404 {
+			logger.Logger.Debug("Alby account not found (may have been deleted), skipping GetMe")
+			return nil, nil
+		}
 		logger.Logger.WithFields(logrus.Fields{
 			"body":        string(body),
 			"status_code": res.StatusCode,
